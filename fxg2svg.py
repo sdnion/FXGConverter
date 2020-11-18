@@ -44,7 +44,10 @@ class FxgToSvg:
                 for node in style_node.findall('./*'):
                     if self.remove_namespace(node.tag) == 'SolidColor':
                         if 'fill' not in style:
-                            style['fill'] = (node.attrib['color'])
+                            if 'color' in node.attrib:
+                                style['fill'] = (node.attrib['color'])
+                            else:
+                                style['fill'] = '#000'
                         else:
                             raise Exception
                     else:
@@ -71,6 +74,25 @@ class FxgToSvg:
                 else:
                     print(transform_node)
                     raise Exception
+            elif tag == 'stroke':
+                for node in style_node.findall('./*'):
+                    if self.remove_namespace(node.tag) == 'SolidColorStroke':
+                        if 'stroke' not in style:
+                            for attrib in node.attrib:
+                                if attrib == 'color':
+                                    style['stroke'] = (node.attrib['color'])
+                                elif attrib == 'weight':
+                                    style['stroke-width'] = (node.attrib['weight'])
+                                elif attrib == 'alpha':
+                                    style['stroke-opacity'] = (node.attrib['alpha'])
+                                else:
+                                    print(attrib)
+                                    raise Exception
+                        else:
+                            raise Exception
+                    else:
+                        print(node)
+                        raise Exception
             else:
                 print(tag)
                 raise Exception
@@ -140,6 +162,14 @@ class FxgToSvg:
                 style = self.parse_path_style(fxg_child)
                 if 'fill' in style:
                     svg_attrib['fill'] = style['fill']
+                else:
+                    svg_attrib['fill'] = 'none'
+                if 'stroke' in style:
+                    svg_attrib['stroke'] = style['stroke']
+                if 'stroke-width' in style:
+                    svg_attrib['stroke-width'] = style['stroke-width']
+                if 'stroke-opacity' in style:
+                    svg_attrib['stroke-opacity'] = style['stroke-opacity']
                 if 'transform' in style:
                     transform_string = svg_attrib.get('transform', '') + style['transform']
                     svg_attrib['transform'] = transform_string
